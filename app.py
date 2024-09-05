@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 # Load the saved model
-model = tf.keras.models.load_model('path_to_your_saved_model.h5')
+model = tf.keras.models.load_model('ai_checker.h5')
 
 # Recreate the exact same vectorize_layer as used during training
 max_features = 75000
