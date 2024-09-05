@@ -3,7 +3,11 @@ import tensorflow as tf
 import numpy as np
 
 # Load the saved model
-model = tf.keras.models.load_model('ai_checker.h5')
+#model = tf.keras.models.load_model('ai_checker.h5')
+#from tensorflow.keras.layers import SpatialDropout1D
+#model = tf.keras.models.load_model('ai_text_detector_model.h5', custom_objects={'SpatialDropout1D': SpatialDropout1D})
+
+model = tf.keras.models.load_model('ai_text_detector_model')
 
 # Recreate the exact same vectorize_layer as used during training
 max_features = 75000
