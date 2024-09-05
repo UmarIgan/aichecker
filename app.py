@@ -7,7 +7,8 @@ import numpy as np
 #from tensorflow.keras.layers import SpatialDropout1D
 #model = tf.keras.models.load_model('ai_text_detector_model.h5', custom_objects={'SpatialDropout1D': SpatialDropout1D})
 
-model = tf.keras.models.load_model('ai_text_detector_model')
+#model = tf.keras.models.load_model('ai_text_detector_model')
+model = tf.keras.layers.TFSMLayer("ai_text_detector_model", call_endpoint='serving_default')
 
 # Recreate the exact same vectorize_layer as used during training
 max_features = 75000
