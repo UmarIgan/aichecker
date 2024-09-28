@@ -10,6 +10,10 @@ st.write(f"TensorFlow version: {tf.__version__}")
 try:
     model = tf.keras.layers.TFSMLayer("ai_text_detector_model_v2", call_endpoint='serving_default')
     st.success("Model loaded successfully from SavedModel directory")
+    
+    # Print model input details
+    st.write("Model input details:")
+    st.write(model.input_signature)
 except Exception as e:
     st.error(f"Error loading SavedModel: {str(e)}")
     st.stop()
@@ -39,8 +43,15 @@ vectorize_layer.adapt(tf.data.Dataset.from_tensor_slices(["placeholder text"]))
 
 def predict_ai_generated(text):
     vectorized_text = vectorize_layer([text])
-    prediction = model(vectorized_text)
-    return prediction[0][0]
+    st.write("Vectorized text shape:", vectorized_text.shape)
+    
+    try:
+        prediction = model(vectorized_text)
+        st.write("Raw prediction:", prediction)
+        return prediction[0][0]
+    except Exception as e:
+        st.error(f"Prediction error: {str(e)}")
+        return None
 
 st.title('AI-Generated Text Detector')
 
@@ -48,15 +59,13 @@ user_input = st.text_area("Enter the text you want to check:", height=200)
 
 if st.button('Predict'):
     if user_input:
-        try:
-            result = predict_ai_generated(user_input)
+        result = predict_ai_generated(user_input)
+        if result is not None:
             st.write(f"Probability of being AI-generated: {result:.2%}")
             if result > 0.5:
                 st.warning("This text is likely AI-generated.")
             else:
                 st.success("This text is likely human-written.")
-        except Exception as e:
-            st.error(f"Error during prediction: {str(e)}")
     else:
         st.warning("Please enter some text to analyze.")
 
