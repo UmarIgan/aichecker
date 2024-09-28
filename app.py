@@ -5,9 +5,9 @@ import numpy as np
 # Print TensorFlow version for debugging
 st.write(f"TensorFlow version: {tf.__version__}")
 
-# Load the saved model
+# Load the saved model using TFSMLayer
 try:
-    model = tf.keras.models.load_model('ai_text_detector_model')
+    model = tf.keras.layers.TFSMLayer("ai_text_detector_model", call_endpoint='serving_default')
     st.success("Model loaded successfully")
 except Exception as e:
     st.error(f"Error loading model: {str(e)}")
@@ -38,7 +38,7 @@ vectorize_layer.adapt(tf.data.Dataset.from_tensor_slices(["placeholder text"]))
 
 def predict_ai_generated(text):
     vectorized_text = vectorize_layer([text])
-    prediction = model.predict(vectorized_text)
+    prediction = model(vectorized_text)
     return prediction[0][0]
 
 st.title('AI-Generated Text Detector')
