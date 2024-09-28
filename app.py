@@ -11,11 +11,11 @@ try:
     model = tf.keras.layers.TFSMLayer("ai_text_detector_model_v2", call_endpoint='serving_default')
     st.success("Model loaded successfully from SavedModel directory")
     
-    # Print model input details
-    st.write("Model input details:")
-    st.write(model.input_signature)
+    # Try to get information about the model's input
+    st.write("Attempting to inspect model structure:")
+    st.write(model.get_config())
 except Exception as e:
-    st.error(f"Error loading SavedModel: {str(e)}")
+    st.error(f"Error loading or inspecting SavedModel: {str(e)}")
     st.stop()
 
 # Recreate the exact same vectorize_layer as used during training
@@ -42,16 +42,26 @@ vectorize_layer = tf.keras.layers.TextVectorization(
 vectorize_layer.adapt(tf.data.Dataset.from_tensor_slices(["placeholder text"]))
 
 def predict_ai_generated(text):
+    # Try both vectorized and raw text input
     vectorized_text = vectorize_layer([text])
     st.write("Vectorized text shape:", vectorized_text.shape)
     
     try:
-        prediction = model(vectorized_text)
-        st.write("Raw prediction:", prediction)
-        return prediction[0][0]
+        # Attempt with vectorized input
+        prediction_vectorized = model(vectorized_text)
+        st.write("Prediction with vectorized input:", prediction_vectorized)
+        return prediction_vectorized[0][0]
     except Exception as e:
-        st.error(f"Prediction error: {str(e)}")
-        return None
+        st.write(f"Error with vectorized input: {str(e)}")
+        
+        try:
+            # Attempt with raw text input
+            prediction_raw = model(tf.constant([text]))
+            st.write("Prediction with raw text input:", prediction_raw)
+            return prediction_raw[0][0]
+        except Exception as e:
+            st.error(f"Error with raw text input: {str(e)}")
+            return None
 
 st.title('AI-Generated Text Detector')
 
