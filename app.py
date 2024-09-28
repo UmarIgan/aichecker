@@ -2,13 +2,16 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 
-# Load the saved model
-#model = tf.keras.models.load_model('ai_checker.h5')
-#from tensorflow.keras.layers import SpatialDropout1D
-#model = tf.keras.models.load_model('ai_text_detector_model.h5', custom_objects={'SpatialDropout1D': SpatialDropout1D})
+# Print TensorFlow version for debugging
+st.write(f"TensorFlow version: {tf.__version__}")
 
-#model = tf.keras.models.load_model('ai_text_detector_model')
-model = tf.keras.layers.TFSMLayer("ai_text_detector_model", call_endpoint='serving_default')
+# Load the saved model
+try:
+    model = tf.keras.models.load_model('ai_text_detector_model')
+    st.success("Model loaded successfully")
+except Exception as e:
+    st.error(f"Error loading model: {str(e)}")
+    st.stop()
 
 # Recreate the exact same vectorize_layer as used during training
 max_features = 75000
@@ -44,12 +47,15 @@ user_input = st.text_area("Enter the text you want to check:", height=200)
 
 if st.button('Predict'):
     if user_input:
-        result = predict_ai_generated(user_input)
-        st.write(f"Probability of being AI-generated: {result:.2%}")
-        if result > 0.5:
-            st.warning("This text is likely AI-generated.")
-        else:
-            st.success("This text is likely human-written.")
+        try:
+            result = predict_ai_generated(user_input)
+            st.write(f"Probability of being AI-generated: {result:.2%}")
+            if result > 0.5:
+                st.warning("This text is likely AI-generated.")
+            else:
+                st.success("This text is likely human-written.")
+        except Exception as e:
+            st.error(f"Error during prediction: {str(e)}")
     else:
         st.warning("Please enter some text to analyze.")
 
