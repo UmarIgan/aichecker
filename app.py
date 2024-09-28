@@ -6,37 +6,12 @@ import os
 # Print TensorFlow version for debugging
 st.write(f"TensorFlow version: {tf.__version__}")
 
-# List contents of the current directory
-st.write("Contents of the current directory:")
-for item in os.listdir('.'):
-    st.write(item)
-
-# Function to load the model
-def load_model():
-    # Option 1: Try loading H5 file
-    if os.path.exists('ai_text_detector_model.h5'):
-        try:
-            model = tf.keras.models.load_model('ai_text_detector_model.h5')
-            st.success("Model loaded successfully from H5 file")
-            return model
-        except Exception as e:
-            st.warning(f"Failed to load H5 model: {str(e)}")
-    
-    # Option 2: Try loading SavedModel from the v2 directory
-    try:
-        model = tf.keras.layers.TFSMLayer("ai_text_detector_model_v2", call_endpoint='serving_default')
-        st.success("Model loaded successfully from SavedModel directory")
-        return model
-    except Exception as e:
-        st.error(f"Error loading SavedModel: {str(e)}")
-    
-    return None
-
-# Load the model
-model = load_model()
-
-if model is None:
-    st.error("Failed to load the model. Please check the model file or directory.")
+# Load the saved model using TFSMLayer
+try:
+    model = tf.keras.layers.TFSMLayer("ai_text_detector_model_v2", call_endpoint='serving_default')
+    st.success("Model loaded successfully from SavedModel directory")
+except Exception as e:
+    st.error(f"Error loading SavedModel: {str(e)}")
     st.stop()
 
 # Recreate the exact same vectorize_layer as used during training
@@ -64,10 +39,7 @@ vectorize_layer.adapt(tf.data.Dataset.from_tensor_slices(["placeholder text"]))
 
 def predict_ai_generated(text):
     vectorized_text = vectorize_layer([text])
-    if isinstance(model, tf.keras.layers.TFSMLayer):
-        prediction = model(vectorized_text)
-    else:
-        prediction = model.predict(vectorized_text)
+    prediction = model(vectorized_text)
     return prediction[0][0]
 
 st.title('AI-Generated Text Detector')
