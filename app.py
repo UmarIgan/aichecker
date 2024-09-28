@@ -11,24 +11,64 @@ st.write("Contents of the current directory:")
 for item in os.listdir('.'):
     st.write(item)
 
-# Check if the model directory exists
-if os.path.exists('ai_text_detector_model'):
-    st.write("Contents of ai_text_detector_model directory:")
-    for item in os.listdir('ai_text_detector_model'):
-        st.write(item)
-else:
-    st.error("ai_text_detector_model directory not found")
+# Function to load the model
+def load_model():
+    # Option 1: Try loading H5 file
+    if os.path.exists('ai_text_detector_model.h5'):
+        try:
+            model = tf.keras.models.load_model('ai_text_detector_model.h5')
+            st.success("Model loaded successfully from H5 file")
+            return model
+        except Exception as e:
+            st.warning(f"Failed to load H5 model: {str(e)}")
+    
+    # Option 2: Try loading SavedModel from the v2 directory
+    try:
+        model = tf.keras.layers.TFSMLayer("ai_text_detector_model_v2", call_endpoint='serving_default')
+        st.success("Model loaded successfully from SavedModel directory")
+        return model
+    except Exception as e:
+        st.error(f"Error loading SavedModel: {str(e)}")
+    
+    return None
 
-# Load the saved model using TFSMLayer
-try:
-    model = tf.keras.layers.TFSMLayer("ai_text_detector_model", call_endpoint='serving_default')
-    st.success("Model loaded successfully")
-except Exception as e:
-    st.error(f"Error loading model: {str(e)}")
+# Load the model
+model = load_model()
+
+if model is None:
+    st.error("Failed to load the model. Please check the model file or directory.")
     st.stop()
 
-# Rest of your code remains the same...
-# (TextVectorization layer, prediction function, etc.)
+# Recreate the exact same vectorize_layer as used during training
+max_features = 75000
+sequence_length = 512
+
+def tf_lower_and_split_punct(text):
+    text = tf.strings.lower(text)
+    text = tf.strings.regex_replace(text, '[^ a-z.?!,¿]', '')
+    text = tf.strings.regex_replace(text, '[.?!,¿]', r' \0 ')
+    text = tf.strings.strip(text)
+    text = tf.strings.join(['[START]', text, '[END]'], separator=' ')
+    return text
+
+vectorize_layer = tf.keras.layers.TextVectorization(
+    standardize=tf_lower_and_split_punct,
+    max_tokens=max_features,
+    output_mode="int",
+    output_sequence_length=sequence_length,
+)
+
+# You need to adapt the layer with the same data as during training
+# This is a placeholder. You should save the vocabulary during training and load it here
+vectorize_layer.adapt(tf.data.Dataset.from_tensor_slices(["placeholder text"]))
+
+def predict_ai_generated(text):
+    vectorized_text = vectorize_layer([text])
+    if isinstance(model, tf.keras.layers.TFSMLayer):
+        prediction = model(vectorized_text)
+    else:
+        prediction = model.predict(vectorized_text)
+    return prediction[0][0]
 
 st.title('AI-Generated Text Detector')
 
